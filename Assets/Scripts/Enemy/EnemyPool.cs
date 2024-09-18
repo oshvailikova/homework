@@ -1,61 +1,40 @@
-using System.Collections.Generic;
+using Common;
 using UnityEngine;
 
 namespace ShootEmUp
 {
-    public sealed class EnemyPool : MonoBehaviour
+    public class EnemyPool : ObjectPool<EnemyPool, EnemyPoolObject, EnemyInfo> { }
+
+    public class EnemyPoolObject : PoolObject<EnemyPool, EnemyPoolObject,EnemyInfo>
     {
-        [Header("Spawn")]
-        [SerializeField]
-        private EnemyPositions enemyPositions;
+        public Enemy Enemy;
 
-        [SerializeField]
-        private GameObject character;
-
-        [SerializeField]
-        private Transform worldTransform;
-
-        [Header("Pool")]
-        [SerializeField]
-        private Transform container;
-
-        [SerializeField]
-        private GameObject prefab;
-
-        private readonly Queue<GameObject> enemyPool = new();
-        
-        private void Awake()
+        protected override void SetReferences()
         {
-            for (var i = 0; i < 7; i++)
-            {
-                var enemy = Instantiate(this.prefab, this.container);
-                this.enemyPool.Enqueue(enemy);
-            }
+            Enemy = instance.GetComponent<Enemy>();
+            Enemy.SetPoolObject(this);
         }
 
-        public GameObject SpawnEnemy()
+        public override void WakeUp(EnemyInfo info)
         {
-            if (!this.enemyPool.TryDequeue(out var enemy))
-            {
-                return null;
-            }
-
-            enemy.transform.SetParent(this.worldTransform);
-
-            var spawnPosition = this.enemyPositions.RandomSpawnPosition();
-            enemy.transform.position = spawnPosition.position;
-            
-            var attackPosition = this.enemyPositions.RandomAttackPosition();
-            enemy.GetComponent<EnemyMoveAgent>().SetDestination(attackPosition.position);
-
-            enemy.GetComponent<EnemyAttackAgent>().SetTarget(this.character);
-            return enemy;
+            base.WakeUp();
+            Enemy.Init(info);
         }
 
-        public void UnspawnEnemy(GameObject enemy)
+       /* public override void Sleep()
         {
-            enemy.transform.SetParent(this.container);
-            this.enemyPool.Enqueue(enemy);
-        }
+            instance.transform.parent = objectPool.transform;
+            instance.SetActive(false);
+        }*/
+
+    }
+
+    public struct EnemyInfo
+    {
+        public Transform SpawnTransform;
+        public Transform MoveTargetTransform;
+        public Transform AimTransform;
+        public ShootEventManager ShootEventManager;
+        public LevelBounds LevelBounds;
     }
 }
