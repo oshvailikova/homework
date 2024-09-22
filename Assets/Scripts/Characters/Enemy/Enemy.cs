@@ -17,7 +17,11 @@ namespace ShootEmUp
         private void FixedUpdate()
         {
             _enemyMovement.UpdateMovement(Time.fixedDeltaTime);
-            _enemyWeapon.UpdateWeapon(Time.fixedDeltaTime, _enemyMovement.IsTargetAchieved);
+
+            if (_enemyMovement.HasReachedTarget)
+            {
+                _enemyWeapon.UpdateWeapon(Time.fixedDeltaTime);
+            }
         }
 
         public void Init(EnemyInfo info)

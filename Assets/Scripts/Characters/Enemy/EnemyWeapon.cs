@@ -19,13 +19,8 @@ namespace ShootEmUp
             _timer = new Timer(shootingCooldownTimer);
         }
 
-        public void UpdateWeapon(float fixedDeltaTime, bool isShootingAllowed)
+        public void UpdateWeapon(float fixedDeltaTime)
         {
-            if (!isShootingAllowed)
-            {
-                return;
-            }
-
             _timer.Update(fixedDeltaTime);
 
             if (_timer.IsReady)

@@ -12,7 +12,7 @@ namespace ShootEmUp
         private Transform _selfTransform;
         private Transform _moveTarget;
 
-        public bool IsTargetAchieved { get; private set; }
+        public bool HasReachedTarget { get; private set; }
 
         public EnemyMovement(MovementComponent movementComponent, Transform selfTransform, Transform moveTarget)
         {
@@ -21,18 +21,17 @@ namespace ShootEmUp
             _moveTarget = moveTarget;
         }
 
-        public void UpdateMovement(float time)
+        public void UpdateMovement(float deltaTime)
         {
-            if (IsTargetAchieved) return;
-            var vector = _moveTarget.position - _selfTransform.position;
-            if (vector.magnitude <= MIN_DISTANCE)
+            if (Vector3.Distance(_selfTransform.position, _moveTarget.position) <= MIN_DISTANCE)
             {
-                IsTargetAchieved = true;
-                return;
+                HasReachedTarget = true;
             }
-
-            var direction = vector.normalized * time;
-            _moveComponent.Move(direction);
+            else
+            {
+                HasReachedTarget = false;
+                _moveComponent.Move((_moveTarget.position - _selfTransform.position).normalized * deltaTime);
+            }
         }
     }
 }
