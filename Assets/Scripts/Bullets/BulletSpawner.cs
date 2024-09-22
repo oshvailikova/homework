@@ -1,41 +1,43 @@
+using Common;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ShootEmUp
 {
-    public sealed class BulletSpawner : InitilizableObject
+    public sealed class BulletSpawner : MonoBehaviour, IBulletSpawner
     {
         [SerializeField]
-        private BulletPool _pool;
+        private ObjectPool _pool;
+        [SerializeField]
+        private LevelBounds _levelBounds;
 
-        public override void Initialize(LevelBounds levelBounds, ShootEventManager shootEventManager) 
+        public void Spawn(Transform firePoint, BulletConfig bulletConfig)
         {
-            base.Initialize(levelBounds, shootEventManager);
-            _shootEventManager?.SubscribeToShoot(SpawnBullet);
-        }
-
-        void OnDisable()
-        {
-            _shootEventManager?.UnsubscribeFromShoot(SpawnBullet);
-        }
-
-        public void SpawnBullet(Transform firePoint, BulletConfig bulletConfig)
-        {            
-            var bullet = _pool.Pop(new BulletInfo
+            var bullet = _pool.GetFromPool<Bullet>();
+            bullet.Init(new BulletInfo
             {
                 Position = firePoint.position,
                 Direction = firePoint.rotation * Vector3.up,
                 BulletConfig = bulletConfig,
                 LevelBounds = _levelBounds
-            }).Bullet;
-            bullet.OnDestroyBullet += ReturnBullet;
+            });
+            bullet.OnDestroy += Return;
         }
 
-        public void ReturnBullet(Bullet bullet)
+        private void Return(Bullet bullet)
         {
-            bullet.OnDestroyBullet -= ReturnBullet;
-            _pool.Push(bullet.PoolObject);
+            bullet.OnDestroy -= Return;
+            _pool.ReturnToPool(bullet.gameObject);
         }
+    }
+
+    public struct BulletInfo
+    {
+        public Vector2 Position;
+        public bool Player;
+        public Vector2 Direction;
+        public BulletConfig BulletConfig;
+        public LevelBounds LevelBounds;
     }
 }

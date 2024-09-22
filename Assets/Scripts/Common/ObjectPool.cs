@@ -1,147 +1,72 @@
-using System;
+
+
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Common
 {
-    public abstract class ObjectPool<TPool, TObject, TInfo> : ObjectPool<TPool, TObject>
-        where TPool : ObjectPool<TPool, TObject, TInfo>
-        where TObject : PoolObject<TPool, TObject, TInfo>, new()
+    public class ObjectPool : MonoBehaviour
     {
-        void Start()
+        [SerializeField]
+        private GameObject _prefab;
+        [SerializeField]
+        private int _initialSize;
+        [SerializeField]
+        private Transform _activeContainer;
+
+        private readonly Queue<GameObject> _poolObjects = new();
+
+        public void Awake()
         {
-            for (int i = 0; i < initialPoolCount; i++)
+            InitializePool();
+        }
+
+        public GameObject GetFromPool()
+        {
+            if (!_poolObjects.TryDequeue(out var poolObject))
             {
-                TObject newPoolObject = CreateNewPoolObject();
-                pool.Add(newPoolObject);
+                poolObject = CreateNewPoolObject();
+            }
+
+            poolObject.transform.SetParent(_activeContainer);
+            poolObject.SetActive(true); 
+
+            return poolObject;
+        }
+
+        public T GetFromPool<T>() where T : Component
+        {
+            GameObject obj = GetFromPool(); 
+            T component = obj.GetComponent<T>(); 
+
+            if (component == null)
+            {
+                Debug.LogWarning("Component " + typeof(T).Name + " not found.");
+            }
+
+            return component;
+        }
+
+        public void ReturnToPool(GameObject poolObject)
+        {
+            poolObject.SetActive(false);
+            poolObject.transform.SetParent(transform);
+            _poolObjects.Enqueue(poolObject);
+        }
+
+        private void InitializePool()
+        {
+            for (int i = 0; i < _initialSize; i++)
+            {
+                _poolObjects.Enqueue(CreateNewPoolObject());
             }
         }
 
-        public virtual TObject Pop(TInfo info)
+        private GameObject CreateNewPoolObject()
         {
-            for (int i = 0; i < pool.Count; i++)
-            {
-                if (pool[i].inPool)
-                {
-                    pool[i].inPool = false;
-                    pool[i].WakeUp(info);
-                    return pool[i];
-                }
-            }
-
-            TObject newPoolObject = CreateNewPoolObject();
-            pool.Add(newPoolObject);
-            newPoolObject.inPool = false;
-            newPoolObject.WakeUp(info);
+            var newPoolObject = Instantiate(_prefab, transform);
+            newPoolObject.SetActive(false);
             return newPoolObject;
-        }
-    }
-
-    public abstract class ObjectPool<TPool, TObject> : MonoBehaviour
-        where TPool : ObjectPool<TPool, TObject>
-        where TObject : PoolObject<TPool, TObject>, new()
-    {
-        public GameObject prefab;
-        public int initialPoolCount = 10;
-        public Transform activeContainer;
-        [HideInInspector]
-        public List<TObject> pool = new List<TObject>();
-
-        void Start()
-        {
-            for (int i = 0; i < initialPoolCount; i++)
-            {
-                TObject newPoolObject = CreateNewPoolObject();
-                pool.Add(newPoolObject);
-            }
-        }
-
-        protected TObject CreateNewPoolObject()
-        {
-            TObject newPoolObject = new TObject();
-            newPoolObject.instance = Instantiate(prefab);
-            newPoolObject.inPool = true;
-            newPoolObject.SetReferences(this as TPool);
-            newPoolObject.Sleep();
-            return newPoolObject;
-        }
-
-        public virtual TObject Pop()
-        {
-            for (int i = 0; i < pool.Count; i++)
-            {
-                if (pool[i].inPool)
-                {
-                    pool[i].inPool = false;
-                    pool[i].WakeUp();
-                    return pool[i];
-                }
-            }
-
-            TObject newPoolObject = CreateNewPoolObject();
-            pool.Add(newPoolObject);
-            newPoolObject.inPool = false;
-            newPoolObject.WakeUp();
-            return newPoolObject;
-        }
-
-        public virtual void Push(TObject poolObject)
-        {
-            poolObject.inPool = true;
-            poolObject.Sleep();
-        }
-
-        public void PushAll()
-        {
-            for (int i = 0; i < pool.Count; i++)
-                if (!pool[i].inPool)
-                    Push(pool[i]);
-        }
-    }
-
-    [Serializable]
-    public abstract class PoolObject<TPool, TObject, TInfo> : PoolObject<TPool, TObject>
-        where TPool : ObjectPool<TPool, TObject, TInfo>
-        where TObject : PoolObject<TPool, TObject, TInfo>, new()
-    {
-        public virtual void WakeUp(TInfo info)
-        { }
-    }
-
-    [Serializable]
-    public abstract class PoolObject<TPool, TObject>
-        where TPool : ObjectPool<TPool, TObject>
-        where TObject : PoolObject<TPool, TObject>, new()
-    {
-        public bool inPool;
-        public GameObject instance;
-        public TPool objectPool;
-
-        public void SetReferences(TPool pool)
-        {
-            objectPool = pool;
-            SetReferences();
-        }
-
-        protected virtual void SetReferences()
-        { }
-
-        public virtual void WakeUp()
-        {
-            instance.SetActive(true);
-            instance.transform.parent = objectPool.activeContainer;
-        }
-
-        public virtual void Sleep()
-        {
-            instance.transform.parent = objectPool.transform;
-            instance.SetActive(false);
-        }
-
-        public virtual void ReturnToPool()
-        {
-            TObject thisObject = this as TObject;
-            objectPool.Push(thisObject);
         }
     }
 }

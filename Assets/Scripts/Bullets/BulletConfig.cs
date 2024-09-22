@@ -7,17 +7,14 @@ namespace ShootEmUp
         fileName = "BulletConfig",
         menuName = "Bullets/New BulletConfig"
     )]
-    public  class BulletConfig : ScriptableObject
+    public class BulletConfig : ScriptableObject
     {
         [SerializeField]
         private PhysicsLayer _physicsLayer;
-
         [SerializeField]
         private Color _color;
-
         [SerializeField]
         private int _damage;
-
         [SerializeField]
         private float _speed;
 
@@ -26,7 +23,6 @@ namespace ShootEmUp
         {
             get => _physicsLayer;
         }
-
 
         public Color Color
         {

@@ -3,14 +3,13 @@ using UnityEngine;
 
 namespace ShootEmUp
 { 
-    public  class InputManager : MonoBehaviour
+    public class InputManager : MonoBehaviour
     {  
-        public event Action OnShootKeyDownEvent;
+        public event Action OnShootEvent;
         public event Action<Vector2> OnMoveEvent;
 
-        private Vector2 _movementDireection;
+        private Vector2 _movementDirection;
         
-
         private void Update()
         {
             HandleShoot();
@@ -21,23 +20,24 @@ namespace ShootEmUp
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                OnShootKeyDownEvent?.Invoke();
-                //characterController._fireRequired = true;
+                OnShootEvent?.Invoke();
             }
         }
 
         private void HandleMove()
         {
-            _movementDireection = Vector2.zero;
+            _movementDirection = Vector2.zero;
+
             if (Input.GetKey(KeyCode.LeftArrow))
             {
-                _movementDireection += Vector2.left;
-            }
+                _movementDirection = Vector2.left;
+            }      
             else if (Input.GetKey(KeyCode.RightArrow))
             {
-                _movementDireection+= Vector2.right;
+                _movementDirection = Vector2.right;
             }
-            OnMoveEvent?.Invoke(_movementDireection);
+            
+            OnMoveEvent?.Invoke(_movementDirection);
         }
 
     }

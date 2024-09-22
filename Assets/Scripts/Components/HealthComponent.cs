@@ -6,12 +6,16 @@ namespace ShootEmUp
     public  class HealthComponent : MonoBehaviour
     {
         public event Action OnDeath;
-        public event Action<int> OnTakeDamage;
 
         [SerializeField]
         private int _maxHitPoints;
 
         private int _hitPoints;
+
+        private void Awake()
+        {
+            ResetHealth();
+        }
 
         public void ResetHealth()
         {
@@ -21,11 +25,7 @@ namespace ShootEmUp
         public void TakeDamage(int damage)
         {
             _hitPoints -= damage;
-            if (_hitPoints > 0)
-            {
-                OnTakeDamage?.Invoke(_hitPoints);
-            }
-
+            
             if (_hitPoints <= 0)
             {
                 OnDeath?.Invoke();

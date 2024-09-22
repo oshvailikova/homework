@@ -9,22 +9,22 @@ namespace ShootEmUp
         [SerializeField]
         private BulletConfig _bulletConfig;
 
-        private ShootEventManager _shootEventManager;
-        
-        public void Initialize(ShootEventManager shootEventManager)
+        private IBulletSpawner _bulletSpawner;
+
+        public void Initialize(IBulletSpawner spawner)
         {
-            _shootEventManager = shootEventManager;
+           _bulletSpawner = spawner;
         }
         
         public void Shoot()
         {
-            _shootEventManager.TriggerShoot(_firePoint, _bulletConfig);
+            _bulletSpawner.Spawn(_firePoint, _bulletConfig);
         }
 
         public void Shoot(Vector2 direction)
         {
             _firePoint.rotation = Quaternion.LookRotation(Vector3.forward, direction);
-            _shootEventManager.TriggerShoot(_firePoint, _bulletConfig);
+           _bulletSpawner.Spawn(_firePoint, _bulletConfig);
         }
     }
 }

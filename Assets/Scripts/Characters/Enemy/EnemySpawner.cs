@@ -1,3 +1,4 @@
+using Common;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,7 @@ namespace ShootEmUp
     public sealed class EnemySpawner : MonoBehaviour
     {
         [SerializeField]
-        private EnemyPool _pool;
+        private ObjectPool _pool;
         [SerializeField]
         private int _maxEnemyCount = 10;
    
@@ -16,16 +17,18 @@ namespace ShootEmUp
         public void SpawnEnemy(EnemyInfo enemyInfo)
         {
             if (_enemiesCount >= _maxEnemyCount) return;
-            var enemy = _pool.Pop(enemyInfo).Enemy;
+            var enemy = _pool.GetFromPool<Enemy>();
+            enemy.Init(enemyInfo);
             _enemiesCount++;
-            enemy.OnEnemyDeath += ReturnEnemy;
+            enemy.OnDestroy += ReturnEnemy;
         }
 
-        public void ReturnEnemy(Enemy enemy)
+        private void ReturnEnemy(Enemy enemy)
         {
-            enemy.OnEnemyDeath -= ReturnEnemy;
+            enemy.OnDestroy -= ReturnEnemy;
             _enemiesCount--;
-            _pool.Push(enemy.PoolObject);
+            _pool.ReturnToPool(enemy.gameObject);
         }
     }
+
 }

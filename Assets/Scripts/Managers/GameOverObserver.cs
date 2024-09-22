@@ -7,7 +7,7 @@ namespace ShootEmUp
     public class GameOverObserver : MonoBehaviour
     {
         [SerializeField]
-        private PlayerController _playerController;
+        private Player _player;
 
         private GameManager _gameManager;
 
@@ -18,15 +18,15 @@ namespace ShootEmUp
 
         private void OnEnable()
         {
-            _playerController.OnPlayerDeath += FinishGame;
+            _player.OnDestroy += FinishGame;
         }
 
         private void OnDisable()
         {
-            _playerController.OnPlayerDeath -= FinishGame;
+            _player.OnDestroy -= FinishGame;
         }
 
-        private void FinishGame()
+        private void FinishGame(Player player)
         {
             _gameManager.FinishGame();
         }

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 namespace ShootEmUp
 {
-    public  class EnemyManager : InitilizableObject
+    public class EnemyManager : MonoBehaviour
     {
         [SerializeField]
         private EnemySpawner _enemySpawner;
@@ -15,23 +15,31 @@ namespace ShootEmUp
         private EnemyPositions _enemyPositions;
         [SerializeField]
         private Transform _aimTransform;
+        [SerializeField]
+        private LevelBounds _levelBounds;
+        [SerializeField]
+        private BulletSpawner _bulletSpawner;
 
-        public override void Initialize(LevelBounds levelBounds, ShootEventManager shootEventManager)
+        private void Start()
         {
-            base.Initialize(levelBounds, shootEventManager);
             StartCoroutine(SpawnEnemy());
+        }
+
+        private void OnDisable()
+        {
+            StopSpawning();
         }
 
         private IEnumerator SpawnEnemy()
         {
             while (true)
             {
-                _enemySpawner.SpawnEnemy(CreateEnemySpawnParams());
+                _enemySpawner.SpawnEnemy(GetEnemyInfo());
                 yield return new WaitForSeconds(_spawnInterval);
             }
         }
 
-        private EnemyInfo CreateEnemySpawnParams()
+        private EnemyInfo GetEnemyInfo()
         {
             return new EnemyInfo
             {
@@ -39,18 +47,13 @@ namespace ShootEmUp
                 MoveTargetTransform = _enemyPositions.RandomAttackPosition(),
                 AimTransform = _aimTransform,
                 LevelBounds = _levelBounds,
-                ShootEventManager = _shootEventManager
+                BulletSpawner = _bulletSpawner
             };
         }
 
-        public void StopSpawning()
+        private void StopSpawning()
         {
             StopAllCoroutines();
-        }
-
-        private void OnDisable()
-        {
-            StopSpawning();
         }
 
     }
