@@ -6,13 +6,36 @@ using UnityEngine;
 
 namespace ShootEmUp
 {
-    public class Enemy : Character<Enemy>
+    public class Enemy : MonoBehaviour
     {
+        public event Action<Enemy> OnDestroy;
+
         [SerializeField]
         private float _shootingTime;
 
+        private WeaponComponent _weaponComponent;
+        private MovementComponent _movementComponent;
+        private HealthComponent _healthComponent;
+
         private EnemyMovement _enemyMovement;
         private EnemyWeapon _enemyWeapon;
+
+        private void Awake()
+        {
+            _weaponComponent = GetComponent<WeaponComponent>();
+            _movementComponent = GetComponent<MovementComponent>();
+            _healthComponent = GetComponent<HealthComponent>();
+        }
+
+        private void OnEnable()
+        {
+            _healthComponent.OnDeath += Destroy;
+        }
+
+        private void OnDisable()
+        {
+            _healthComponent.OnDeath -= Destroy;
+        }
 
         private void FixedUpdate()
         {
@@ -33,5 +56,9 @@ namespace ShootEmUp
             _enemyWeapon = new EnemyWeapon(_weaponComponent, _shootingTime, transform, info.AimTransform);
         }
 
+        private void Destroy()
+        {
+            OnDestroy.Invoke(this);
+        }
     }
 }

@@ -4,21 +4,39 @@ using UnityEngine;
 namespace ShootEmUp
 {
     [RequireComponent(typeof(MovementComponent), typeof(HealthComponent), typeof(WeaponComponent))]
-    public class Player : Character<Player>
+    public class Player: MonoBehaviour
     {
+        public event Action<Player> OnDestroy;
+
         [SerializeField]
         private LevelBounds _levelBounds;
         [SerializeField]
         private BulletSpawner _bulletSpawner;
 
+        private WeaponComponent _weaponComponent;
+        private MovementComponent _movementComponent;
+        private HealthComponent _healthComponent;
+
         private Vector2 _moveDirection;
 
-        protected override void Awake()
+        private void Awake()
         {
-            base.Awake();
+            _weaponComponent = GetComponent<WeaponComponent>();
+            _movementComponent = GetComponent<MovementComponent>();
+            _healthComponent = GetComponent<HealthComponent>();
 
             _movementComponent.Initialize(_levelBounds);
             _weaponComponent.Initialize(_bulletSpawner);
+        }
+
+        private void OnEnable()
+        {
+            _healthComponent.OnDeath += Destroy;
+        }
+
+        private void OnDisable()
+        {
+            _healthComponent.OnDeath -= Destroy;
         }
 
         private void FixedUpdate()
@@ -36,6 +54,9 @@ namespace ShootEmUp
         {
             _moveDirection = direction;
         }
-
+        private void Destroy()
+        {
+            OnDestroy.Invoke(this);
+        }
     }
 }

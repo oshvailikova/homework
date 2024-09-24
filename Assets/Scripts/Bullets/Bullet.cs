@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 namespace ShootEmUp
 {
     [RequireComponent(typeof(Rigidbody2D), typeof(SpriteRenderer))]
-    public class Bullet : MonoBehaviour, IDestroyable<Bullet>
+    public class Bullet : MonoBehaviour
     {
         public event Action<Bullet> OnDestroy;
 
@@ -47,7 +47,7 @@ namespace ShootEmUp
             _damage = bulletInfo.BulletConfig.Damage;
         }
 
-        public void Destroy()
+        private void Destroy()
         {
             OnDestroy?.Invoke(this);
         }
