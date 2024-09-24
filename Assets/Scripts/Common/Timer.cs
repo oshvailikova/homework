@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,8 @@ namespace Common
 {
     public class Timer
     {
+        public event Action OnFinished;
+
         private float _remainingTime;
         private float _countdownTime;
 
@@ -15,6 +18,11 @@ namespace Common
         {
             _countdownTime = countDownTime;
             Reset();
+        }
+
+        public float GetRemainingTime()
+        {
+            return Mathf.Max(0, _remainingTime);
         }
 
         public void Reset()
@@ -29,8 +37,9 @@ namespace Common
                 return;
             _remainingTime -= time;
             if (_remainingTime <= 0)
-            {
+            {              
                 IsReady = true;
+                OnFinished?.Invoke();
             }
         }
     }

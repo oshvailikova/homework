@@ -12,11 +12,6 @@ namespace ShootEmUp
 
         private int _hitPoints;
 
-        private void Awake()
-        {
-            ResetHealth();
-        }
-
         public void ResetHealth()
         {
             _hitPoints = _maxHitPoints;

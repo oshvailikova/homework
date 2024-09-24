@@ -3,11 +3,13 @@ using UnityEngine;
 
 namespace ShootEmUp
 {
-    public sealed class LevelBackground : MonoBehaviour
+    public sealed class LevelBackground : MonoBehaviour,
+        IGameStartListener, IGameFixedUpdateListener
     {
         [SerializeField]
         private Params _params;
 
+        private Vector2 _initialPosition;
         private float _startPositionY;
         private float _endPositionY;
         private float _movingSpeedY;
@@ -16,16 +18,28 @@ namespace ShootEmUp
 
         private void Awake()
         {
+            _initialPosition = transform.position;
+
             _startPositionY = _params.StartPositionY;
             _endPositionY = _params.EndPositionY;
             _movingSpeedY = _params.MovingSpeedY;
+        }
+
+        private void Start()
+        {
+            this.As<IGameListener>().Register();
+        }
+
+        public void OnGameStart()
+        {
+            transform.position = _initialPosition;
 
             var position = transform.position;
             _positionX = position.x;
             _positionZ = position.z;
         }
 
-        private void FixedUpdate()
+        public void OnFixedUpdate(float deltaTime)
         {
             if (transform.position.y <= _endPositionY)
             {
@@ -38,7 +52,7 @@ namespace ShootEmUp
 
             transform.position -= new Vector3(
                 _positionX,
-                _movingSpeedY * Time.fixedDeltaTime,
+                _movingSpeedY * deltaTime,
                 _positionZ
             );
         }

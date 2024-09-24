@@ -3,17 +3,17 @@ using UnityEngine;
 
 namespace ShootEmUp
 { 
-    public class InputManager : MonoBehaviour
+    public class InputManager : MonoBehaviour,
+        IGameUpdateListener
     {  
         public event Action OnShootEvent;
         public event Action<Vector2> OnMoveEvent;
 
         private Vector2 _movementDirection;
-        
-        private void Update()
+
+        private void Start()
         {
-            HandleShoot();
-            HandleMove();
+            this.As<IGameListener>().Register();
         }
 
         private void HandleShoot()
@@ -36,9 +36,14 @@ namespace ShootEmUp
             {
                 _movementDirection = Vector2.right;
             }
-            
+
             OnMoveEvent?.Invoke(_movementDirection);
         }
 
+        public void OnUpdate(float time)
+        {
+            HandleShoot();
+            HandleMove();
+        }
     }
 }

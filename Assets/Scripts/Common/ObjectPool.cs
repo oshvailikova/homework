@@ -1,11 +1,13 @@
 
 
+using ShootEmUp;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Common
 {
-    public class ObjectPool : MonoBehaviour
+    public class ObjectPool : MonoBehaviour,IGameStartListener, IGameFinishListener
     {
         [SerializeField]
         private GameObject _prefab;
@@ -15,10 +17,11 @@ namespace Common
         private Transform _activeContainer;
 
         private readonly Queue<GameObject> _poolObjects = new();
+        private readonly HashSet<GameObject> _activeObjects = new();
 
-        public void Awake()
+        public void Start()
         {
-            InitializePool();
+            this.As<IGameListener>().Register();
         }
 
         public GameObject GetFromPool()
@@ -29,8 +32,8 @@ namespace Common
             }
 
             poolObject.transform.SetParent(_activeContainer);
-            poolObject.SetActive(true); 
-
+            poolObject.SetActive(true);
+            _activeObjects.Add(poolObject);
             return poolObject;
         }
 
@@ -49,9 +52,12 @@ namespace Common
 
         public void ReturnToPool(GameObject poolObject)
         {
-            poolObject.SetActive(false);
-            poolObject.transform.SetParent(transform);
-            _poolObjects.Enqueue(poolObject);
+            if (_activeObjects.Remove(poolObject))
+            {
+                poolObject.SetActive(false);
+                poolObject.transform.SetParent(transform);
+                _poolObjects.Enqueue(poolObject);
+            }           
         }
 
         private void InitializePool()
@@ -68,5 +74,29 @@ namespace Common
             newPoolObject.SetActive(false);
             return newPoolObject;
         }
+        public void OnGameStart()
+        {
+            InitializePool();
+        }
+
+        public void OnGameFinish()
+        {
+            while (_activeObjects.Count > 0)
+            {
+                ReturnToPool(_activeObjects.ElementAt(0));
+            }
+
+            while (_poolObjects.TryDequeue(out var poolObject))
+            {
+                var c = poolObject.GetComponent<IGameListener>();
+                Debug.Log(gameObject + "  " + c);
+                if (poolObject.TryGetComponent<IGameListener>(out IGameListener listener))
+                {
+                    listener.Remove();
+                }
+                Destroy(poolObject);
+            }
+        }
+
     }
 }
