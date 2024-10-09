@@ -1,41 +1,40 @@
 using System;
 using UnityEngine;
+using Zenject;
 
 namespace ShootEmUp
 {
-    [RequireComponent(typeof(MovementComponent), typeof(HealthComponent), typeof(WeaponComponent))]
-    public class Player : MonoBehaviour,
+    public sealed class Player : MonoBehaviour, IDestructible,
     IGameStartListener, IGameFinishListener,
     IGameFixedUpdateListener
     {
         public event Action<Player> OnDestroy;
 
         [SerializeField]
-        private LevelBounds _levelBounds;
-        [SerializeField]
-        private BulletSpawner _bulletSpawner;
+        private Transform _firePoint;
 
-        private Vector2 _startPosition;
+        private PlayerConfig _playerConfig;
 
         private WeaponComponent _weaponComponent;
         private MovementComponent _movementComponent;
         private HealthComponent _healthComponent;
 
+        private Vector2 _startPosition;
         private Vector2 _moveDirection;
 
-        private void Awake()
+        [Inject]
+        public void Construct(LevelBounds levelBounds, IBulletSpawner bulletSpawner, PlayerConfig playerConfig)
         {
-            _weaponComponent = GetComponent<WeaponComponent>();
-            _movementComponent = GetComponent<MovementComponent>();
-            _healthComponent = GetComponent<HealthComponent>();
+            _playerConfig = playerConfig;
 
-            _movementComponent.Initialize(_levelBounds);
-            _weaponComponent.Initialize(_bulletSpawner);
-        }
+            var rigidBody2D = GetComponent<Rigidbody2D>();
 
-        private void Start()
-        {
-            this.As<IGameListener>().Register();
+            _weaponComponent = new WeaponComponent(_firePoint, bulletSpawner, _playerConfig.BulletConfig);
+            _movementComponent = new MovementComponent(rigidBody2D, levelBounds);
+            _healthComponent = new HealthComponent(_playerConfig.Health);
+
+            _movementComponent.Init(_playerConfig.Speed);
+
         }
 
         public void RequireFire()
@@ -48,6 +47,10 @@ namespace ShootEmUp
             _moveDirection = direction;
         }
 
+        public void TakeDamage(int damage)
+        {
+            _healthComponent.TakeDamage(damage);
+        }
         private void Destroy()
         {
             OnDestroy.Invoke(this);

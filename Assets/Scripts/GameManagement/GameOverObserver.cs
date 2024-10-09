@@ -1,25 +1,18 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Zenject;
 
 namespace ShootEmUp
 {
-    public class GameOverObserver : MonoBehaviour,
+    public sealed class GameOverObserver :
         IGameStartListener,IGameFinishListener
     {
-        [SerializeField]
+        private GameManager _gameManager;
         private Player _player;
 
-        private GameManager _gameManager;
-
-        private void Awake()
-        {          
-            _gameManager = GetComponent<GameManager>();
-        }
-
-        private void Start()
+        [Inject]
+        public void Construct(GameManager gameManager, Player player)
         {
-            this.As<IGameListener>().Register();
+            _gameManager = gameManager;
+            _player = player;
         }
 
         private void FinishGame(Player player)

@@ -1,48 +1,69 @@
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
-using UnityEngine.UIElements;
+using Zenject;
 
 namespace ShootEmUp
 {
-    public class EnemyManager : MonoBehaviour,
-        IGameStartListener, IGamePauseListener, IGameResumeListener, IGameFinishListener
+    public sealed class EnemyManager : 
+        IGameStartListener, IGamePauseListener, IGameResumeListener, IGameFinishListener,
+         IGameFixedUpdateListener
     {
-        [SerializeField]
         private EnemySpawner _enemySpawner;
-        [SerializeField]
-        private float _spawnInterval = 1f;
-        [SerializeField]
+      
         private EnemyPositions _enemyPositions;
-        [SerializeField]
         private Transform _aimTransform;
-        [SerializeField]
-        private LevelBounds _levelBounds;
-        [SerializeField]
-        private BulletSpawner _bulletSpawner;
+ 
+        private readonly List<Enemy> _activeEnemies = new();
 
-        private void Start()
+        private CancellationTokenSource  _spawnCancellation;
+
+        private int _spawnIntervalInMillis;
+
+        [Inject]
+        public void Construct(EnemyPool enemyPool,EnemyPositions enemyPositions, Player player, EnemySpawnConfig enemySpawnConfig)
         {
-            this.As<IGameListener>().Register();
+            _enemyPositions = enemyPositions;
+            _aimTransform = player.transform;
+
+            _spawnIntervalInMillis = enemySpawnConfig.SpawnIntervalInMillis;
+
+            _enemySpawner = new EnemySpawner(enemySpawnConfig.MaxEnemyCount, enemyPool);
         }
 
         private void StartSpawning()
         {
-            StartCoroutine(SpawnEnemy());
+            _spawnCancellation = new CancellationTokenSource();
+
+            Spawn();
         }
 
         private void StopSpawning()
         {
-            StopAllCoroutines();
+            _spawnCancellation.Cancel();
         }
 
-        private IEnumerator SpawnEnemy()
+        private async void Spawn()
         {
-            while (true)
+            while (!_spawnCancellation.IsCancellationRequested)
             {
-                _enemySpawner.SpawnEnemy(GetEnemyInfo());
-                yield return new WaitForSeconds(_spawnInterval);
+                if (_enemySpawner.CanSpawn())
+                {
+                    var enemy = _enemySpawner.SpawnEnemy(GetEnemyInfo());
+                    _activeEnemies.Add(enemy);
+                    enemy.OnDestroy += Destroy;
+                }
+
+                await UniTask.Delay(_spawnIntervalInMillis);
             }
+        }
+
+        private void Destroy(Enemy enemy)
+        {
+            enemy.OnDestroy -= Destroy;
+            _activeEnemies.Remove(enemy);
+            _enemySpawner.ReturnEnemy(enemy);
         }
 
         private EnemyInfo GetEnemyInfo()
@@ -51,9 +72,7 @@ namespace ShootEmUp
             {
                 SpawnTransform = _enemyPositions.RandomSpawnPosition(),
                 MoveTargetTransform = _enemyPositions.RandomAttackPosition(),
-                AimTransform = _aimTransform,
-                LevelBounds = _levelBounds,
-                BulletSpawner = _bulletSpawner
+                AimTransform = _aimTransform
             };
         }
 
@@ -64,7 +83,7 @@ namespace ShootEmUp
 
         public void OnGamePause()
         {
-            StartSpawning();
+            StopSpawning();
         }
 
         public void OnGameResume()
@@ -75,7 +94,23 @@ namespace ShootEmUp
         public void OnGameFinish()
         {
             StopSpawning();
+
+            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
+            {
+                _activeEnemies[i].OnGameFinish();
+                Destroy(_activeEnemies[i]);
+            }
+
             _enemySpawner.Clear();
+            _activeEnemies.Clear();
+        }
+
+        public void OnFixedUpdate(float deltaTime)
+        {
+            for (int i = 0; i < _activeEnemies.Count; i++)
+            {
+                _activeEnemies[i].OnFixedUpdate(deltaTime);
+            }
         }
     }
 }

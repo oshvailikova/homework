@@ -1,10 +1,9 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace ShootEmUp
 {
-    public  class EnemyMovement
+    public sealed class EnemyMovement
     {
         private const float MIN_DISTANCE = 0.25f;
 
@@ -14,11 +13,16 @@ namespace ShootEmUp
 
         public bool HasReachedTarget { get; private set; }
 
-        public EnemyMovement(MovementComponent movementComponent, Transform selfTransform, Transform moveTarget)
+        public EnemyMovement(MovementComponent movementComponent, Transform selfTransform)
         {
             _moveComponent = movementComponent;           
             _selfTransform = selfTransform;
+        }
+
+        public void SetMoveTarget(Transform moveTarget)
+        {
             _moveTarget = moveTarget;
+            HasReachedTarget = false;
         }
 
         public void UpdateMovement(float deltaTime)

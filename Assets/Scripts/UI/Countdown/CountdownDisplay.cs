@@ -1,10 +1,9 @@
 using UnityEngine;
 using TMPro;
 
-
 namespace ShootEmUp
 {
-    public class CountdownDisplay : MonoBehaviour
+    public sealed class CountdownDisplay : MonoBehaviour
     {
         private TextMeshProUGUI _countdownText;
 

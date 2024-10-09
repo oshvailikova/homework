@@ -1,28 +1,26 @@
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
 
 namespace ShootEmUp
 {
-    [RequireComponent(typeof(Rigidbody2D))]
-    public  class MovementComponent : MonoBehaviour
-    {       
-        [SerializeField]
+    public sealed class MovementComponent 
+    {   
         private float _speed = 5.0f;
 
         private LevelBounds _levelBounds;
         private Rigidbody2D _rigidbody2D;
         private Vector2 _velocity;
 
-        private void Awake()
+        public MovementComponent(Rigidbody2D rigidbody2D, LevelBounds levelBounds)
         {
-            _rigidbody2D = GetComponent<Rigidbody2D>();
+            _levelBounds = levelBounds;
+            _rigidbody2D = rigidbody2D;
             _velocity = Vector2.zero;
         }
 
-        public void Initialize(LevelBounds levelBounds)
+        public void Init(int speed)
         {
-            _levelBounds = levelBounds;
+            _velocity = Vector2.zero;
+            _speed = speed;
         }
 
         public void Move(Vector2 direction)

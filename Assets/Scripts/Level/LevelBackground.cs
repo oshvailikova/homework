@@ -25,11 +25,6 @@ namespace ShootEmUp
             _movingSpeedY = _params.MovingSpeedY;
         }
 
-        private void Start()
-        {
-            this.As<IGameListener>().Register();
-        }
-
         public void OnGameStart()
         {
             transform.position = _initialPosition;
@@ -58,15 +53,10 @@ namespace ShootEmUp
         }
 
         [Serializable]
-        public  class Params
+        public struct Params
         {
-            [SerializeField]
             public float StartPositionY;
-
-            [SerializeField]
             public float EndPositionY;
-
-            [SerializeField]
             public float MovingSpeedY;
         }
     }

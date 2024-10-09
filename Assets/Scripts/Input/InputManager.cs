@@ -3,18 +3,13 @@ using UnityEngine;
 
 namespace ShootEmUp
 { 
-    public class InputManager : MonoBehaviour,
+    public sealed class InputManager :
         IGameUpdateListener
     {  
         public event Action OnShootEvent;
         public event Action<Vector2> OnMoveEvent;
 
         private Vector2 _movementDirection;
-
-        private void Start()
-        {
-            this.As<IGameListener>().Register();
-        }
 
         private void HandleShoot()
         {

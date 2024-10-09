@@ -5,18 +5,7 @@ namespace ShootEmUp
 {
     public interface IGameListener
     {
-        public static event Action<IGameListener> OnRegister;
-        public static event Action<IGameListener> OnRemove;
-
-        public void Register()
-        {
-            OnRegister?.Invoke(this);
-        }
-
-        public void Remove()
-        {
-            OnRemove?.Invoke(this);
-        }
+       
     }
 
     public interface IGameStartListener : IGameListener

@@ -1,14 +1,11 @@
 using System;
-using System.Drawing;
 using UnityEngine;
-using UnityEngine.UIElements;
+using Zenject;
 
 namespace ShootEmUp
 {
     [RequireComponent(typeof(Rigidbody2D), typeof(SpriteRenderer))]
-    public class Bullet : MonoBehaviour,
-        IGamePauseListener,IGameResumeListener,
-        IGameFixedUpdateListener
+    public class Bullet : MonoBehaviour
     {
         public event Action<Bullet> OnDestroy;
 
@@ -20,27 +17,21 @@ namespace ShootEmUp
 
         private Vector2 _velocity;
 
-        private void Awake()
+        [Inject]
+        public void Construct(LevelBounds levelBounds)
         {
+            _levelBounds = levelBounds;
+
             _rigidbody2D = GetComponent<Rigidbody2D>();
             _spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (CheckCollisionWithBullets(collision)) return;
-            if (CheckCollisionWithDestrictableObject(collision)) return;
-        }
-
         public void Init(BulletInfo bulletInfo)
         {
-            this.As<IGameListener>().Register();
-
             transform.position = bulletInfo.Position;
             
             gameObject.layer = (int)bulletInfo.BulletConfig.PhysicsLayer;
 
-            _levelBounds = bulletInfo.LevelBounds;
             _damage = bulletInfo.BulletConfig.Damage;
             _velocity = bulletInfo.Direction * bulletInfo.BulletConfig.Speed;   
 
@@ -50,7 +41,6 @@ namespace ShootEmUp
 
         public void Destroy()
         {
-            this.As<IGameListener>().Remove();
             OnDestroy?.Invoke(this);
         }
 
@@ -68,17 +58,33 @@ namespace ShootEmUp
 
         private bool CheckCollisionWithDestrictableObject(Collision2D collision)
         {
-            if (!collision.gameObject.CompareTag("DestrictableObject"))
+            if (!collision.gameObject.CompareTag("DestructibleObject"))
             {
                 return false;
             }
 
-            var health = collision.gameObject.GetComponent<HealthComponent>();
-            health.TakeDamage(_damage);
+            var destrictible = collision.gameObject.GetComponent<IDestructible>();
+            destrictible.TakeDamage(_damage);
 
             Destroy();
             
             return true;          
+        }
+
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            if (CheckCollisionWithBullets(collision)) return;
+            if (CheckCollisionWithDestrictableObject(collision)) return;
+        }
+
+        public void OnGamePause()
+        {           
+            _rigidbody2D.velocity = Vector2.zero;
+        }
+
+        public void OnGameResume()
+        {
+            _rigidbody2D.velocity = _velocity;
         }
 
         public void OnFixedUpdate(float fixedTime)
@@ -87,17 +93,6 @@ namespace ShootEmUp
             {
                 Destroy();
             }
-        }
-
-        public void OnGamePause()
-        {
-            Debug.Log("Pause");
-            _rigidbody2D.velocity = Vector2.zero;
-        }
-
-        public void OnGameResume()
-        {
-            _rigidbody2D.velocity = _velocity;
         }
     }
 }

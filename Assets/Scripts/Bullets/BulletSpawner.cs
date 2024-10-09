@@ -1,43 +1,36 @@
-using Common;
-using System.Collections;
-using System.Collections.Generic;
+using ShootEmUp;
+using Extensions;
 using UnityEngine;
+using Zenject;
 
-namespace ShootEmUp
-{
-    public sealed class BulletSpawner : MonoBehaviour, IBulletSpawner
+public class BulletSpawner : IBulletSpawner
+{ 
+    private BulletPool _bulletPool;
+
+    [Inject]
+    public void Construct(BulletPool bulletPool)
     {
-        [SerializeField]
-        private ObjectPool _pool;
-        [SerializeField]
-        private LevelBounds _levelBounds;
-
-        public void Spawn(Transform firePoint, BulletConfig bulletConfig)
-        {
-            var bullet = _pool.GetFromPool<Bullet>();
-            bullet.Init(new BulletInfo
-            {
-                Position = firePoint.position,
-                Direction = firePoint.rotation * Vector3.up,
-                BulletConfig = bulletConfig,
-                LevelBounds = _levelBounds
-            });
-            bullet.OnDestroy += Return;
-        }
-
-        private void Return(Bullet bullet)
-        {
-            bullet.OnDestroy -= Return;
-            _pool.ReturnToPool(bullet.gameObject);
-        }
+        _bulletPool = bulletPool;
     }
 
-    public struct BulletInfo
+    public void Spawn(Transform firePoint, BulletConfig bulletConfig)
     {
-        public Vector2 Position;
-        public bool Player;
-        public Vector2 Direction;
-        public BulletConfig BulletConfig;
-        public LevelBounds LevelBounds;
+        var bullet = _bulletPool.Spawn(new BulletInfo
+        {
+            Position = firePoint.position,
+            Direction = firePoint.rotation * Vector3.up,
+            BulletConfig = bulletConfig
+        });
+        bullet.OnDestroy += Despawn;
+
+        this.As<IBulletSpawner>().Register(bullet);
+    }
+
+    public void Despawn(Bullet bullet)
+    {
+        bullet.OnDestroy -= Despawn;
+        _bulletPool.Despawn(bullet);
+
+        this.As<IBulletSpawner>().Remove(bullet);
     }
 }

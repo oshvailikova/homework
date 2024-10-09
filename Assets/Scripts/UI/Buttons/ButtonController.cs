@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace ShootEmUp
 {
-    public class ButtonController : MonoBehaviour, IButtonController
+    public sealed class ButtonController : MonoBehaviour, IButtonController
     {
         private Button _button;
 

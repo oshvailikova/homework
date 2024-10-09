@@ -1,19 +1,17 @@
-using ShootEmUp;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 namespace ShootEmUp
 {
-    public class Enemy : MonoBehaviour,
-         IGameStartListener, IGameFinishListener,
-         IGameFixedUpdateListener
+    public class Enemy : MonoBehaviour, IDestructible
     {
         public event Action<Enemy> OnDestroy;
 
         [SerializeField]
-        private float _shootingTime;
+        private Transform _firePoint;
+        [SerializeField]
+        private EnemyConfig _enemyConfig;
 
         private EnemyMovement _enemyMovement;
         private EnemyWeapon _enemyWeapon;
@@ -22,36 +20,43 @@ namespace ShootEmUp
         private MovementComponent _movementComponent;
         private HealthComponent _healthComponent;
 
-        private void Awake()
+        [Inject]
+        public void Construct(LevelBounds levelBounds, IBulletSpawner bulletSpawner)
         {
-            _weaponComponent = GetComponent<WeaponComponent>();
-            _movementComponent = GetComponent<MovementComponent>();
-            _healthComponent = GetComponent<HealthComponent>();
-        }
+            var rigidbody2D = GetComponent<Rigidbody2D>();
 
-        private void Start()
-        {
-            this.As<IGameListener>().Register();
+            _movementComponent = new MovementComponent(rigidbody2D, levelBounds);
+            _healthComponent = new HealthComponent(_enemyConfig.Health);
+            _weaponComponent = new WeaponComponent(_firePoint, bulletSpawner, _enemyConfig.BulletConfig);
+
+            _enemyMovement = new EnemyMovement(_movementComponent, transform);
+            _enemyWeapon = new EnemyWeapon(_weaponComponent, _enemyConfig.ShootingTime, transform);
+
         }
 
         public void Init(EnemyInfo info)
         {
             transform.position = info.SpawnTransform.position;
-            _movementComponent.Initialize(info.LevelBounds);
-            _weaponComponent.Initialize(info.BulletSpawner);
-            _enemyMovement = new EnemyMovement(_movementComponent, transform, info.MoveTargetTransform);
-            _enemyWeapon = new EnemyWeapon(_weaponComponent, _shootingTime, transform, info.AimTransform);
-        }
-        private void Destroy()
-        {
-            this.As<IGameListener>().Remove();
-            OnDestroy.Invoke(this);
+
+            _movementComponent.Init(_enemyConfig.Speed);
+
+            _healthComponent.ResetHealth();
+
+            _enemyMovement.SetMoveTarget(info.MoveTargetTransform);
+            _enemyWeapon.SetAim(info.AimTransform);
+
+            _healthComponent.OnDeath += Destroy;
         }
 
-        public void OnGameStart()
+        public void TakeDamage(int damage)
         {
-            _healthComponent.ResetHealth();
-            _healthComponent.OnDeath += Destroy;
+            _healthComponent.TakeDamage(damage);
+        }
+
+        private void Destroy()
+        {
+            _healthComponent.OnDeath -= Destroy;
+            OnDestroy.Invoke(this);
         }
 
         public void OnGameFinish()

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ShootEmUp
 {
-    public class EnemyWeapon
+    public sealed class EnemyWeapon
     {
         private WeaponComponent _weaponComponent;
         private Transform _aimTransform;
@@ -11,12 +11,18 @@ namespace ShootEmUp
 
         private Timer _timer;
 
-        public EnemyWeapon(WeaponComponent weaponComponent, float shootingCooldownTimer, Transform selfTransform, Transform aimTransform)
+        public EnemyWeapon(WeaponComponent weaponComponent, float shootingCooldownTimer, Transform selfTransform)
         {
             _weaponComponent = weaponComponent;
             _selfTransform = selfTransform;
-            _aimTransform = aimTransform;
+          
             _timer = new Timer(shootingCooldownTimer);
+        }
+
+        public void SetAim(Transform aimTransform)
+        {
+            _aimTransform = aimTransform;
+            _timer.Reset();
         }
 
         public void UpdateWeapon(float fixedDeltaTime)

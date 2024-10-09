@@ -2,20 +2,19 @@ using UnityEngine;
 
 namespace ShootEmUp
 {
-    public class WeaponComponent : MonoBehaviour
+    public sealed class WeaponComponent
     {
-        [SerializeField]
-        private Transform _firePoint;     
-        [SerializeField]
+        private Transform _firePoint;
         private BulletConfig _bulletConfig;
-
         private IBulletSpawner _bulletSpawner;
 
-        public void Initialize(IBulletSpawner spawner)
+        public WeaponComponent(Transform firePoint, IBulletSpawner bulletSpawner, BulletConfig bulletConfig)
         {
-           _bulletSpawner = spawner;
+            _firePoint = firePoint;
+            _bulletSpawner = bulletSpawner;
+            _bulletConfig = bulletConfig;
         }
-        
+
         public void Shoot()
         {
             _bulletSpawner.Spawn(_firePoint, _bulletConfig);
@@ -24,7 +23,7 @@ namespace ShootEmUp
         public void Shoot(Vector2 direction)
         {
             _firePoint.rotation = Quaternion.LookRotation(Vector3.forward, direction);
-           _bulletSpawner.Spawn(_firePoint, _bulletConfig);
+            _bulletSpawner.Spawn(_firePoint, _bulletConfig);
         }
     }
 }

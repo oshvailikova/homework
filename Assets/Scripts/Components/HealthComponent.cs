@@ -3,14 +3,17 @@ using UnityEngine;
 
 namespace ShootEmUp
 {
-    public  class HealthComponent : MonoBehaviour
+    public sealed class HealthComponent
     {
         public event Action OnDeath;
 
-        [SerializeField]
         private int _maxHitPoints;
-
         private int _hitPoints;
+
+        public HealthComponent(int health)
+        {
+            _maxHitPoints = health;
+        }
 
         public void ResetHealth()
         {

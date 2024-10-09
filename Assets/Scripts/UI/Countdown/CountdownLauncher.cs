@@ -1,29 +1,26 @@
 using Common;
-using ShootEmUp;
+using Cysharp.Threading.Tasks;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-
+using Zenject;
 
 namespace ShootEmUp
 {
-    public class CountdownLauncher : MonoBehaviour
+    public sealed class CountdownLauncher 
     {
         public event Action LauncherIsReady;
 
-        [SerializeField]
-        private float _countdownStartValue;
-
-        [SerializeField]
+        private CountdownLauncherConfig _countdownLauncherConfig;
         private CountdownDisplay _countdownDisplay;
 
         private Timer _timer;
 
-        private void Awake()
+        [Inject]
+        private void Construct(CountdownDisplay countdownDisplay, CountdownLauncherConfig countdownLauncherConfig)
         {
-            _timer = new Timer(_countdownStartValue);
+            _countdownDisplay = countdownDisplay;
+            _countdownLauncherConfig = countdownLauncherConfig;
+
+            _timer = new Timer(_countdownLauncherConfig.CountdownValue);
             _timer.OnFinished += OnCountdownFinished;
         }
 
@@ -31,19 +28,7 @@ namespace ShootEmUp
         {
             _timer.Reset();
             _countdownDisplay.SetVisibility(true);
-            StartCoroutine(CountdownCoroutine());
-        }
-
-        private IEnumerator CountdownCoroutine()
-        {
-            while (!_timer.IsReady)
-            {
-                _countdownDisplay.UpdateDisplay(_timer.GetRemainingTime());
-
-                yield return new WaitForSeconds(1f);
-
-                _timer.Update(1f);
-            }
+            CountdownCoroutine();
         }
 
         private void OnCountdownFinished()
@@ -51,5 +36,18 @@ namespace ShootEmUp
             _countdownDisplay.SetVisibility(false);
             LauncherIsReady?.Invoke();
         }
+
+        private async void CountdownCoroutine()
+        {
+            while (!_timer.IsReady)
+            {
+                _countdownDisplay.UpdateDisplay(_timer.GetRemainingTime());
+
+                await UniTask.Delay(1000);
+
+                _timer.Update(1f);
+            }
+        }
+
     }
 }

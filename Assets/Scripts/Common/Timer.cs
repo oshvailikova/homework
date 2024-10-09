@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Common
 {
-    public class Timer
+    public sealed class Timer
     {
         public event Action OnFinished;
 
@@ -35,7 +33,8 @@ namespace Common
         {
             if (IsReady)
                 return;
-            _remainingTime -= time;
+
+            _remainingTime -= time;            
             if (_remainingTime <= 0)
             {              
                 IsReady = true;

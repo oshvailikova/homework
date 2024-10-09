@@ -1,31 +1,31 @@
 using ShootEmUp;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Zenject;
 
-public class PlayerInputObserver : MonoBehaviour,
-    IGameStartListener,IGameFinishListener
+namespace ShootEmUp
 {
-    [SerializeField]
-    private Player _player;
-    [SerializeField]
-    private InputManager _inputManager;
-
-    private void Start()
+    public sealed class PlayerInputObserver :
+        IGameStartListener, IGameFinishListener
     {
-        this.As<IGameListener>().Register();
-    }
+        private Player _player;
+        private InputManager _inputManager;
 
-    public void OnGameStart()
-    {
-        _inputManager.OnShootEvent += _player.RequireFire;
-        _inputManager.OnMoveEvent += _player.SetMoveDirection;
-    }
+        [Inject]
+        public void Constract(Player player, InputManager inputManager)
+        {
+            _player = player;
+            _inputManager = inputManager;
+        }
 
-    public void OnGameFinish()
-    {
-        _inputManager.OnShootEvent -= _player.RequireFire;
-        _inputManager.OnMoveEvent -= _player.SetMoveDirection;
-    }
+        public void OnGameStart()
+        {
+            _inputManager.OnShootEvent += _player.RequireFire;
+            _inputManager.OnMoveEvent += _player.SetMoveDirection;
+        }
 
+        public void OnGameFinish()
+        {
+            _inputManager.OnShootEvent -= _player.RequireFire;
+            _inputManager.OnMoveEvent -= _player.SetMoveDirection;
+        }
+    }
 }
