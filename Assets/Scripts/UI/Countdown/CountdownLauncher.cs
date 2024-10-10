@@ -28,7 +28,7 @@ namespace ShootEmUp
         {
             _timer.Reset();
             _countdownDisplay.SetVisibility(true);
-            CountdownCoroutine();
+            CountdownCoroutine().Forget();
         }
 
         private void OnCountdownFinished()
@@ -37,13 +37,13 @@ namespace ShootEmUp
             LauncherIsReady?.Invoke();
         }
 
-        private async void CountdownCoroutine()
+        private async UniTaskVoid CountdownCoroutine()
         {
             while (!_timer.IsReady)
             {
                 _countdownDisplay.UpdateDisplay(_timer.GetRemainingTime());
 
-                await UniTask.Delay(1000);
+                await UniTask.WaitForSeconds(1.0f);
 
                 _timer.Update(1f);
             }

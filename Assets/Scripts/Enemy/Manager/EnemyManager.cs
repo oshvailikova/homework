@@ -19,7 +19,7 @@ namespace ShootEmUp
 
         private CancellationTokenSource  _spawnCancellation;
 
-        private int _spawnIntervalInMillis;
+        private float _spawnInterval;
 
         [Inject]
         public void Construct(EnemyPool enemyPool,EnemyPositions enemyPositions, Player player, EnemySpawnConfig enemySpawnConfig)
@@ -27,7 +27,7 @@ namespace ShootEmUp
             _enemyPositions = enemyPositions;
             _aimTransform = player.transform;
 
-            _spawnIntervalInMillis = enemySpawnConfig.SpawnIntervalInMillis;
+            _spawnInterval = enemySpawnConfig.SpawnInterval;
 
             _enemySpawner = new EnemySpawner(enemySpawnConfig.MaxEnemyCount, enemyPool);
         }
@@ -36,7 +36,7 @@ namespace ShootEmUp
         {
             _spawnCancellation = new CancellationTokenSource();
 
-            Spawn();
+            Spawn().Forget();
         }
 
         private void StopSpawning()
@@ -44,7 +44,7 @@ namespace ShootEmUp
             _spawnCancellation.Cancel();
         }
 
-        private async void Spawn()
+        private async UniTaskVoid Spawn()
         {
             while (!_spawnCancellation.IsCancellationRequested)
             {
@@ -55,7 +55,7 @@ namespace ShootEmUp
                     enemy.OnDestroy += Destroy;
                 }
 
-                await UniTask.Delay(_spawnIntervalInMillis);
+                await UniTask.WaitForSeconds(_spawnInterval);
             }
         }
 

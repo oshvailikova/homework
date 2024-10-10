@@ -9,13 +9,13 @@ namespace ShootEmUp
     public sealed class EnemySpawnConfig : ScriptableObject
     {
         [SerializeField]
-        private int _spawnInterval = 1;
+        private float _spawnInterval = 1;
         [SerializeField]
         private int _maxEnemyCount = 10;
 
-        public int SpawnIntervalInMillis
+        public float SpawnInterval
         {
-            get => _spawnInterval * 1000;
+            get => _spawnInterval;
         }
 
         public int MaxEnemyCount
