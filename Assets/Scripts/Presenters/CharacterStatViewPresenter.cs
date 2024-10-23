@@ -1,5 +1,5 @@
 using Data;
-using UI.Interfaces.Presenters;
+using Presenters.Interfaces;
 using UniRx;
 
 namespace Presenters

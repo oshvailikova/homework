@@ -1,6 +1,6 @@
 using UniRx;
 
-namespace UI.Interfaces.Presenters
+namespace Presenters.Interfaces
 {
     public interface IStatPropertyPresenter
     {

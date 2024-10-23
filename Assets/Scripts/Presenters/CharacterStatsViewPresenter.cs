@@ -1,7 +1,6 @@
 using Data;
 using Presenters.Interfaces;
 using System.Collections.Generic;
-using UI.Interfaces.Presenters;
 using UniRx;
 using CharacterInfo = Data.CharacterInfo;
 

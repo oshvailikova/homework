@@ -1,5 +1,4 @@
 using Presenters.Interfaces.Common;
-using UI.Interfaces.Presenters;
 using UniRx;
 
 namespace Presenters.Interfaces

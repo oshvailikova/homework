@@ -3,7 +3,7 @@ using Helpers;
 using UI.Popup;
 using Zenject;
 
-namespace PresentationModel
+namespace DI
 {
     public class SceneInstaller : MonoInstaller
     {
