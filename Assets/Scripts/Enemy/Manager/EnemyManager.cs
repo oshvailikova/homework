@@ -34,6 +34,9 @@ namespace ShootEmUp
 
         private void StartSpawning()
         {
+            _spawnCancellation?.Cancel();
+            _spawnCancellation?.Dispose();
+
             _spawnCancellation = new CancellationTokenSource();
 
             Spawn().Forget();
@@ -55,7 +58,7 @@ namespace ShootEmUp
                     enemy.OnDestroy += Destroy;
                 }
 
-                await UniTask.WaitForSeconds(_spawnInterval);
+                await UniTask.WaitForSeconds(_spawnInterval, cancellationToken: _spawnCancellation.Token);
             }
         }
 
